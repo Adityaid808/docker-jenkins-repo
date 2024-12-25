@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    tools {
+        maven 'maven-3.9'
+    }
+    stages {
+        stage('Build Maven') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Adityaid808/docker-jenkins-repo.git']])
+                dir('Spring-docker-jenkins-ci-cd') {  // Change to the subdirectory containing pom.xml
+                    bat 'mvn clean package'
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dir('Spring-docker-jenkins-ci-cd'){ // Change to the subdirectory containing Dockerfile
+                        // Build and tag the Docker image with your Docker Hub username
+                        bat 'docker build -t adityavairagade/jenkins-docker-application:latest .'
+                    }
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'pass', usernameVariable: 'user')]) {
+                        bat "docker login -u %user% -p %pass%"
+                        
+                        // Push the tagged image directly
+                        bat "docker push adityavairagade/jenkins-docker-application:latest"
+                    }
+                }
+            }
+        }
+    }
+}
