@@ -36,5 +36,24 @@ pipeline {
                 }
             }
         }
+        
+        
+        stage('Clean up Local Image') {
+            steps {
+                script {
+                    // Remove the local image after pushing
+                    bat 'docker rmi adityavairagade/jenkins-docker-application:latest'
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Run the Docker container from the image
+                    bat 'docker run -d --name jenkins-docker-application -p 8080:8080 adityavairagade/jenkins-docker-application:latest'
+                }
+            }
+        }
     }
 }
